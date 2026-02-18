@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>InsureIQ — Smart Insurance Recommender</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #070d1a;
+    --surface: #0f1929;
+    --surface2: #162133;
+    --surface3: #1c2a40;
+    --border: #1e2f47;
+    --accent: #00d4aa;
+    --accent2: #7c6af7;
+    --accent3: #f59e0b;
+    --danger: #ef4444;
+    --blue: #3b82f6;
+    --text: #e2e8f4;
+    --muted: #56698a;
+    --muted2: #8899b0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,170,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,170,0.025) 1px, transparent 1px);
+    background-size: 44px 44px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .layout { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 230px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+  }
+
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--accent);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 6px;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 14px var(--accent);
+    animation: pulse 2.5s infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.75); }
+  }
+
+  .nav-section {
+    font-size: 9px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 14px 10px 5px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 9px;
+    cursor: pointer;
+    color: var(--muted2);
+    font-size: 13.5px;
+    font-weight: 500;
+    transition: all 0.18s;
+    border: 1px solid transparent;
+  }
+
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active {
+    background: rgba(0,212,170,0.09);
+    color: var(--accent);
+    border-color: rgba(0,212,170,0.18);
+  }
+
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
+
+  .sidebar-stats {
+    margin-top: auto;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  .sidebar-stats-title {
+    font-size: 9px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .sidebar-stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-stat-row:last-child { border-bottom: none; }
+  .sidebar-stat-label { color: var(--muted2); }
+  .sidebar-stat-val { font-family: 'DM Mono', monospace; color: var(--accent); font-size: 12px; }
+
+  /* MAIN */
+  .main { margin-left: 230px; flex: 1; padding: 28px 32px; }
+
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .page-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  .page-title span { color: var(--accent); }
+  .page-subtitle { font-size: 13px; color: var(--muted2); margin-top: 5px; }
+
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  .badge {
+    background: rgba(0,212,170,0.08);
+    border: 1px solid rgba(0,212,170,0.22);
+    color: var(--accent);
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    padding: 5px 11px;
+    border-radius: 20px;
+  }
+
+  /* STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .stat-card:hover { transform: translateY(-2px); border-color: rgba(0,212,170,0.25); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .stat-card:nth-child(1) { animation-delay: 0.00s; }
+  .stat-card:nth-child(2) { animation-delay: 0.07s; }
+  .stat-card:nth-child(3) { animation-delay: 0.14s; }
+
+  .stat-label { font-size: 10px; color: var(--muted); margin-bottom: 8px; font-family: 'DM Mono', monospace; letter-spacing: 1px; }
+  .stat-value { font-size: 28px; font-weight: 600; color: var(--text); }
+  .stat-sub { font-size: 11px; color: var(--accent); margin-top: 3px; }
+  .stat-icon { position: absolute; top: 16px; right: 16px; font-size: 20px; opacity: 0.3; }
+
+  /* LAYOUT */
+  .two-col { display: grid; grid-template-columns: 1fr 380px; gap: 18px; margin-bottom: 18px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+    animation: fadeUp 0.5s ease 0.2s both;
+  }
+
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-title-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* PRESETS */
+  .presets-row { display: flex; gap: 7px; margin-bottom: 14px; flex-wrap: wrap; }
+
+  .preset-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 11.5px;
+    font-family: 'Outfit', sans-serif;
+    color: var(--muted2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .preset-btn:hover {
+    background: rgba(0,212,170,0.08);
+    border-color: rgba(0,212,170,0.3);
+    color: var(--accent);
+  }
+
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+
+  input, select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 13px;
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    appearance: none;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,212,170,0.08);
+  }
+
+  select option { background: var(--surface2); }
+
+  .btn-run {
+    margin-top: 14px;
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    color: #07111f;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-run:hover {
+    background: #00edbb;
+    box-shadow: 0 6px 24px rgba(0,212,170,0.28);
+    transform: translateY(-1px);
+  }
+
+  .btn-run:active { transform: translateY(0); }
+  .btn-run.loading { pointer-events: none; opacity: 0.65; }
+
+  /* RESULT PANEL */
+  .result-panel { display: flex; flex-direction: column; gap: 14px; }
+
+  .top-result {
+    background: linear-gradient(135deg, rgba(0,212,170,0.07), rgba(124,106,247,0.07));
+    border: 1px solid rgba(0,212,170,0.2);
+    border-radius: 14px;
+    padding: 18px;
+    text-align: center;
+  }
+
+  .result-label { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; letter-spacing: 1px; margin-bottom: 7px; }
+
+  .result-insurance {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    color: var(--accent);
+    margin-bottom: 5px;
+  }
+
+  .result-confidence { font-size: 12px; color: var(--muted2); }
+  .result-confidence span { color: var(--accent3); font-weight: 600; }
+
+  /* CONFIDENCE BARS */
+  .conf-bar-item { margin-bottom: 10px; }
+
+  .conf-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  .conf-bar-label span:last-child { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; }
+
+  .conf-bar-track {
+    height: 5px;
+    background: var(--surface2);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .conf-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* MESSAGE */
+  .msg-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--text);
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: border-color 0.3s;
+  }
+
+  .msg-box.has-content {
+    text-align: left;
+    justify-content: flex-start;
+    align-items: flex-start;
+    border-color: rgba(0,212,170,0.15);
+  }
+
+  .msg-placeholder { color: var(--muted); font-style: italic; font-size: 12.5px; }
+
+  .msg-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+  .action-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted2);
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* HISTORY TABLE */
+  .table { width: 100%; border-collapse: collapse; }
+
+  .table th {
+    text-align: left;
+    font-size: 9px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1.2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table td {
+    padding: 10px 12px;
+    font-size: 12.5px;
+    border-bottom: 1px solid rgba(30,47,71,0.5);
+    transition: background 0.12s;
+  }
+
+  .table tr:hover td { background: rgba(0,212,170,0.025); }
+  .table tr:last-child td { border-bottom: none; }
+
+  .tag {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 10.5px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+  }
+
+  .tag-term_life  { background: rgba(0,212,170,0.12); color: #00d4aa; }
+  .tag-whole_life { background: rgba(124,106,247,0.12); color: #7c6af7; }
+  .tag-health     { background: rgba(245,158,11,0.12); color: #f59e0b; }
+  .tag-home       { background: rgba(239,68,68,0.12); color: #ef4444; }
+  .tag-auto       { background: rgba(59,130,246,0.12); color: #3b82f6; }
+
+  /* SPINNER */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(0,0,0,0.2);
+    border-top-color: #07111f;
+    border-radius: 50%;
+    animation: spin 0.65s linear infinite;
+    vertical-align: middle;
+    margin-right: 7px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty { text-align: center; padding: 36px 20px; color: var(--muted); font-size: 13px; }
+  .empty-icon { font-size: 28px; margin-bottom: 8px; opacity: 0.35; }
+
+  @keyframes resultPop {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .result-pop { animation: resultPop 0.28s ease; }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      InsureIQ
+    </div>
+
+    <div class="nav-section">Navigation</div>
+    <div class="nav-item active" onclick="switchTab('recommend')">
+      <span class="nav-icon">🎯</span> Recommend
+    </div>
+    <div class="nav-item" onclick="switchTab('history')">
+      <span class="nav-icon">🕓</span> History
+    </div>
+
+    <div class="nav-section">General</div>
+    <div class="nav-item">
+      <span class="nav-icon">⚙️</span> Settings
+    </div>
+
+    <!-- Session summary -->
+    <div class="sidebar-stats">
+      <div class="sidebar-stats-title">Session Summary</div>
+      <div class="sidebar-stat-row">
+        <span class="sidebar-stat-label">Predictions</span>
+        <span class="sidebar-stat-val" id="sb-preds">0</span>
+      </div>
+      <div class="sidebar-stat-row">
+        <span class="sidebar-stat-label">Top pick</span>
+        <span class="sidebar-stat-val" id="sb-top">—</span>
+      </div>
+      <div class="sidebar-stat-row">
+        <span class="sidebar-stat-label">Avg confidence</span>
+        <span class="sidebar-stat-val" id="sb-avg">—</span>
+      </div>
+      <canvas id="miniDonut" width="100" height="100"></canvas>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <div class="header">
+      <div>
+        <div class="page-title">Insurance <span>Recommender</span></div>
+        <div class="page-subtitle">ML-powered personalized recommendations with outreach message generation</div>
+      </div>
+      <div class="header-right">
+        <div class="badge">🟢 Engine Active</div>
+        <div class="badge">1,000 Training Samples</div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">🔮</div>
+        <div class="stat-label">PREDICTIONS MADE</div>
+        <div class="stat-value" id="stat-preds">0</div>
+        <div class="stat-sub">This session</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-label">TOP PRODUCT</div>
+        <div class="stat-value" style="font-size:17px;" id="stat-top">—</div>
+        <div class="stat-sub" id="stat-top-pct">Run a prediction</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-label">AVG CONFIDENCE</div>
+        <div class="stat-value" id="stat-avg">—</div>
+        <div class="stat-sub">Across this session</div>
+      </div>
+    </div>
+
+    <!-- RECOMMEND TAB -->
+    <div id="tab-recommend">
+      <div class="two-col">
+
+        <!-- Form -->
+        <div class="card">
+          <div class="card-title">
+            Customer Profile
+            <span class="card-title-tag">INPUT FEATURES</span>
+          </div>
+
+          <div class="tone-label" style="margin-top:0; margin-bottom:6px;">⚡ Quick Presets</div>
+          <div class="presets-row">
+            <button class="preset-btn" onclick="loadPreset('young_family')">👶 Young Family</button>
+            <button class="preset-btn" onclick="loadPreset('new_homeowner')">🏠 New Homeowner</button>
+            <button class="preset-btn" onclick="loadPreset('retiree')">🧓 Retiree</button>
+            <button class="preset-btn" onclick="loadPreset('new_grad')">🎓 New Grad</button>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Age</label>
+              <input type="number" id="age" min="18" max="100" value="34" placeholder="e.g. 34"/>
+            </div>
+            <div class="form-group">
+              <label>Marital Status</label>
+              <select id="marital_status">
+                <option value="single">Single</option>
+                <option value="married" selected>Married</option>
+                <option value="divorced">Divorced</option>
+                <option value="widowed">Widowed</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Has Children</label>
+              <select id="has_kids">
+                <option value="1" selected>Yes</option>
+                <option value="0">No</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Income Bracket</label>
+              <select id="income_bracket">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label>Recent Life Event</label>
+              <select id="life_event">
+                <option value="none">None</option>
+                <option value="new_baby" selected>New Baby</option>
+                <option value="new_job">New Job</option>
+                <option value="retirement">Retirement</option>
+                <option value="marriage">Marriage</option>
+                <option value="divorce">Divorce</option>
+                <option value="bought_home">Bought Home</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn-run" id="run-btn" onclick="runRecommendation()">
+            ✦ Get Recommendation
+          </button>
+        </div>
+
+        <!-- Results -->
+        <div class="result-panel">
+
+          <div class="card" style="padding:18px;">
+            <div class="card-title" style="margin-bottom:12px;">
+              Top Recommendation
+              <span class="card-title-tag">ML OUTPUT</span>
+            </div>
+            <div class="top-result">
+              <div class="result-label">RECOMMENDED INSURANCE</div>
+              <div class="result-insurance" id="top-insurance">—</div>
+              <div class="result-confidence" id="top-conf">Run a prediction to see results</div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:18px; flex:1;">
+            <div class="card-title" style="margin-bottom:12px;">
+              All Scores
+              <span class="card-title-tag">CONFIDENCE</span>
+            </div>
+            <div id="conf-bars">
+              <div class="empty">
+                <div class="empty-icon">📊</div>
+                Scores appear after prediction
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Message -->
+      <div class="card">
+        <div class="card-title">
+          Personalized Outreach Message
+          <span class="card-title-tag">AI GENERATED</span>
+        </div>
+        <div class="msg-box" id="msg-box">
+          <span class="msg-placeholder">Run a recommendation — a personalized message will be generated for the customer</span>
+        </div>
+        <div class="msg-actions" id="msg-actions" style="display:none;">
+          <button class="action-btn" onclick="copyMessage()">📋 Copy</button>
+          <button class="action-btn" onclick="runRecommendation()">🔄 Regenerate</button>
+          <button class="action-btn" onclick="exportCard()">💾 Export Card</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div id="tab-history" hidden>
+      <div class="card">
+        <div class="card-title">
+          Prediction History
+          <span class="card-title-tag">THIS SESSION</span>
+        </div>
+        <div id="history-content">
+          <div class="empty">
+            <div class="empty-icon">🕓</div>
+            No predictions yet — run your first one!
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── STATE ──
+let predCount = 0;
+let historyData = [];
+let lastMessage = '';
+let sessionCounts = { term_life:0, whole_life:0, health:0, home:0, auto:0 };
+let totalConfidence = 0;
+let lastResult = null;
+
+// ── TAB ──
+function switchTab(tab) {
+  ['recommend','history'].forEach(t => {
+    document.getElementById('tab-' + t).hidden = t !== tab;
+  });
+  document.querySelectorAll('.nav-item').forEach((el, i) => {
+    el.classList.toggle('active', ['recommend','history'][i] === tab);
+  });
+}
+
+// ── PRESETS ──
+const presets = {
+  young_family:  { age:31, marital_status:'married', has_kids:1, income_bracket:'medium', life_event:'new_baby' },
+  new_homeowner: { age:35, marital_status:'married', has_kids:0, income_bracket:'medium', life_event:'bought_home' },
+  retiree:       { age:63, marital_status:'widowed', has_kids:0, income_bracket:'high',   life_event:'retirement' },
+  new_grad:      { age:23, marital_status:'single',  has_kids:0, income_bracket:'low',    life_event:'new_job' },
+};
+
+function loadPreset(key) {
+  const p = presets[key];
+  document.getElementById('age').value = p.age;
+  document.getElementById('marital_status').value = p.marital_status;
+  document.getElementById('has_kids').value = p.has_kids;
+  document.getElementById('income_bracket').value = p.income_bracket;
+  document.getElementById('life_event').value = p.life_event;
+}
+
+// ── RECOMMENDATION LOGIC ──
+function getRecommendation(age, ms, kids, income, event) {
+  const s = { term_life:0, whole_life:0, health:0, home:0, auto:0 };
+  if (event==='new_baby'||(kids&&ms==='married'))       { s.term_life+=0.85; s.health+=0.08; s.whole_life+=0.05; s.auto+=0.02; }
+  else if (age>=55||event==='retirement')               { s.whole_life+=0.78; s.term_life+=0.12; s.health+=0.07; s.auto+=0.03; }
+  else if (event==='bought_home')                       { s.home+=0.72; s.term_life+=0.15; s.health+=0.08; s.auto+=0.05; }
+  else if (income==='low'||event==='new_job')           { s.health+=0.70; s.auto+=0.15; s.term_life+=0.10; s.home+=0.05; }
+  else if (ms==='divorced'||ms==='widowed')             { s.term_life+=0.65; s.health+=0.20; s.whole_life+=0.10; s.auto+=0.05; }
+  else if (age<30&&ms==='single')                       { s.health+=0.60; s.auto+=0.25; s.term_life+=0.10; s.home+=0.05; }
+  else                                                  { s.health+=0.33; s.term_life+=0.34; s.auto+=0.33; }
+  return Object.entries(s).map(([ins,conf])=>({insurance:ins,confidence:conf})).sort((a,b)=>b.confidence-a.confidence);
+}
+
+// ── MINI DONUT ──
+function drawMiniDonut() {
+  const canvas = document.getElementById('miniDonut');
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const total = Object.values(sessionCounts).reduce((a,b)=>a+b,0);
+  if (!total) {
+    ctx.beginPath(); ctx.arc(W/2,H/2,36,0,Math.PI*2);
+    ctx.strokeStyle='#1e2f47'; ctx.lineWidth=10; ctx.stroke(); return;
+  }
+  const colors = {term_life:'#00d4aa',whole_life:'#7c6af7',health:'#f59e0b',home:'#ef4444',auto:'#3b82f6'};
+  let sa = -Math.PI/2;
+  for (const [k,c] of Object.entries(sessionCounts)) {
+    if (!c) continue;
+    const sl = (c/total)*Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(W/2,H/2);
+    ctx.arc(W/2,H/2,38,sa,sa+sl); ctx.closePath();
+    ctx.fillStyle=colors[k]; ctx.fill(); sa+=sl;
+  }
+  ctx.beginPath(); ctx.arc(W/2,H/2,24,0,Math.PI*2);
+  ctx.fillStyle='#0f1929'; ctx.fill();
+  ctx.font='bold 13px Outfit'; ctx.fillStyle='#e2e8f4'; ctx.textAlign='center';
+  ctx.fillText(total, W/2, H/2+5);
+}
+
+// ── MESSAGE GENERATION ──
+function generateMessage(customer, top) {
+  const msgs = {
+    term_life: `Hi there! Based on your profile, Term Life Insurance would be a wonderful fit for someone at your stage of life${customer.life_event==='new_baby'?' — and congratulations on your new little one!':customer.has_kids?' with a growing family':''}. It gives you affordable, reliable coverage to protect the people who depend on you most, so you can focus on the moments that matter. Our flexible plans let you choose the right coverage for your needs and budget. We'd love to walk you through your options — feel free to reach out anytime!`,
+    whole_life: `Hello! Given ${customer.age>=55?'your life stage':'your recent retirement'}, Whole Life Insurance could be one of the smartest financial decisions you make right now. Unlike term policies, it builds real cash value over time and provides lifetime coverage — a genuine asset that grows with you. It's a powerful way to protect your legacy while creating a meaningful safety net. We'd be happy to explore the right plan for your goals!`,
+    health: `Hi! Looking at your profile, Health Insurance stands out as the most important coverage for you right now${customer.life_event==='new_job'?' — especially as you settle into your exciting new role':customer.income_bracket==='low'?', and we have budget-friendly options that never compromise on quality':''}. Having solid coverage means you can focus on living fully without worrying about unexpected bills. We have plans that fit a wide range of needs — reach out and we'll find the perfect fit!`,
+    home: `Congratulations on your new home! Protecting your biggest investment with Home Insurance is one of the most important moves you can make right now. Our policies cover structural damage, personal belongings, and more, so you can settle in with complete peace of mind. We also have great bundling options if you need additional coverage. Reach out anytime — we're here to make it simple!`,
+    auto: `Hi! Based on your profile, Auto Insurance looks like a great match for where you are right now. We offer competitive rates and flexible coverage — from basic liability to full comprehensive plans — so you get exactly what you need at a price that works. Our claims process is fast and hassle-free. Feel free to reach out and we'll find you the best option!`,
+  };
+  return msgs[top.insurance] ?? `Based on your profile, we recommend ${top.insurance.replace('_',' ')} insurance. Please reach out to learn more.`;
+}
+
+// ── EXPORT CARD ──
+function exportCard() {
+  if (!lastResult) return;
+  const { customer, top } = lastResult;
+  const text = [
+    'InsureIQ — Customer Recommendation Card',
+    '========================================',
+    `Age: ${customer.age}`,
+    `Marital Status: ${customer.marital_status}`,
+    `Has Kids: ${customer.has_kids ? 'Yes' : 'No'}`,
+    `Income Bracket: ${customer.income_bracket}`,
+    `Life Event: ${customer.life_event}`,
+    '',
+    `Recommended Insurance: ${top.insurance.replace('_',' ').toUpperCase()}`,
+    `Confidence: ${(top.confidence*100).toFixed(0)}%`,
+    '',
+    'Outreach Message:',
+    lastMessage,
+  ].join('\n');
+  const blob = new Blob([text], { type:'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'insureiq_card_' + Date.now() + '.txt';
+  a.click();
+}
+
+// ── BAR COLORS ──
+const barColors = { term_life:'#00d4aa', whole_life:'#7c6af7', health:'#f59e0b', home:'#ef4444', auto:'#3b82f6' };
+
+// ── UPDATE STATS ──
+function updateStats(top) {
+  predCount++;
+  sessionCounts[top.insurance]++;
+  totalConfidence += top.confidence;
+
+  document.getElementById('stat-preds').textContent = predCount;
+  document.getElementById('sb-preds').textContent = predCount;
+
+  const topEntry = Object.entries(sessionCounts).sort((a,b)=>b[1]-a[1])[0];
+  const topName = topEntry[0].replace('_',' ');
+  document.getElementById('stat-top').textContent = topName;
+  document.getElementById('stat-top-pct').textContent = Math.round(topEntry[1]/predCount*100) + '% of predictions';
+  document.getElementById('sb-top').textContent = topName;
+
+  const avg = (totalConfidence/predCount*100).toFixed(0) + '%';
+  document.getElementById('stat-avg').textContent = avg;
+  document.getElementById('sb-avg').textContent = avg;
+
+  drawMiniDonut();
+}
+
+// ── MAIN RUN ──
+async function runRecommendation() {
+  const age = parseInt(document.getElementById('age').value);
+  const ms = document.getElementById('marital_status').value;
+  const kids = parseInt(document.getElementById('has_kids').value);
+  const income = document.getElementById('income_bracket').value;
+  const event = document.getElementById('life_event').value;
+
+  const ageEl = document.getElementById('age');
+  if (!age || age < 18 || age > 100) { ageEl.style.borderColor='var(--danger)'; ageEl.focus(); return; }
+  ageEl.style.borderColor = '';
+
+  const btn = document.getElementById('run-btn');
+  btn.classList.add('loading');
+  btn.innerHTML = '<span class="spinner"></span> Analyzing profile...';
+
+  await new Promise(r => setTimeout(r, 600));
+
+  const results = getRecommendation(age, ms, kids, income, event);
+  const top = results[0];
+
+  // Top result
+  const topEl = document.getElementById('top-insurance');
+  topEl.textContent = top.insurance.replace('_',' ').toUpperCase();
+  topEl.closest('.top-result').classList.add('result-pop');
+  setTimeout(() => topEl.closest('.top-result').classList.remove('result-pop'), 400);
+
+  document.getElementById('top-conf').innerHTML = `Confidence: <span>${(top.confidence*100).toFixed(0)}%</span>`;
+
+  // Bars
+  document.getElementById('conf-bars').innerHTML = results.map(r => `
+    <div class="conf-bar-item">
+      <div class="conf-bar-label"><span>${r.insurance.replace('_',' ')}</span><span>${(r.confidence*100).toFixed(0)}%</span></div>
+      <div class="conf-bar-track">
+        <div class="conf-bar-fill" style="width:0%;background:${barColors[r.insurance]}" data-w="${r.confidence*100}%"></div>
+      </div>
+    </div>
+  `).join('');
+  setTimeout(() => document.querySelectorAll('.conf-bar-fill').forEach(el => el.style.width = el.dataset.w), 60);
+
+  // Message
+  btn.innerHTML = '<span class="spinner"></span> Generating message...';
+  await new Promise(r => setTimeout(r, 500));
+
+  const customer = { age, marital_status:ms, has_kids:kids, income_bracket:income, life_event:event };
+  const msg = generateMessage(customer, top);
+  lastMessage = msg;
+  lastResult = { customer, top };
+
+  const msgBox = document.getElementById('msg-box');
+  msgBox.classList.add('has-content');
+  msgBox.textContent = msg;
+  document.getElementById('msg-actions').style.display = 'flex';
+
+  updateStats(top);
+
+  historyData.unshift({ age, marital_status:ms, has_kids:kids?'Yes':'No', income_bracket:income, life_event:event, result:top.insurance, confidence:top.confidence });
+  updateHistory();
+
+  btn.classList.remove('loading');
+  btn.innerHTML = '✦ Get Recommendation';
+}
+
+// ── HISTORY ──
+function updateHistory() {
+  const el = document.getElementById('history-content');
+  if (!historyData.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🕓</div>No predictions yet</div>'; return; }
+  el.innerHTML = `
+    <table class="table">
+      <thead><tr><th>Age</th><th>Marital</th><th>Kids</th><th>Income</th><th>Life Event</th><th>Recommendation</th><th>Confidence</th></tr></thead>
+      <tbody>${historyData.map(h=>`
+        <tr>
+          <td>${h.age}</td><td>${h.marital_status}</td><td>${h.has_kids}</td><td>${h.income_bracket}</td>
+          <td>${h.life_event.replace('_',' ')}</td>
+          <td><span class="tag tag-${h.result}">${h.result.replace('_',' ')}</span></td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent)">${(h.confidence*100).toFixed(0)}%</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ── COPY ──
+function copyMessage() {
+  navigator.clipboard.writeText(lastMessage).then(() => {
+    const btn = document.querySelector('#msg-actions .action-btn');
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy', 2000);
+  });
+}
+
+// Init
+drawMiniDonut();
+</script>
+</body>
+</html>

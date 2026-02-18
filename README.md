@@ -26,10 +26,6 @@ insurance_recommender/
 pip install -r requirements.txt
 python generate_data.py
 python train.py
-
-# 4. Get a recommendation for a new customer
 python recommend.py
-
-# 5. (Optional) Run as a simple chatbot with Ollama
 python app.py
 ```

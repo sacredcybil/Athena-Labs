@@ -22,13 +22,9 @@ insurance_recommender/
 ## How to Run
 
 ```bash
-# 1. Install dependencies
+
 pip install -r requirements.txt
-
-# 2. Generate synthetic data
 python generate_data.py
-
-# 3. Train the model
 python train.py
 
 # 4. Get a recommendation for a new customer
